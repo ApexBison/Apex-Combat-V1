@@ -1,0 +1,37 @@
+import java.util.*;
+import net.runelite.api.Prayer;
+
+Object specialData = v.getVars().getObj("specialData");
+Object prayersObj = v.getVars().getObj("prayers");
+
+int specialAttackConfigIndex = 0; // This is selected in order of the list in settings for special attack gear.
+
+if (specialData != null && prayersObj instanceof Map) {
+    java.util.List<java.util.Map<String, Object>> specialDataList = (java.util.List<java.util.Map<String, Object>>) specialData;
+    java.util.Map<Prayer, java.util.Map<String, Object>> prayers = (java.util.Map<Prayer, java.util.Map<String, Object>>) prayersObj;
+
+    if (specialAttackConfigIndex >= 0 && specialAttackConfigIndex < specialDataList.size()) {
+        java.util.Map<String, Object> selectedSpecialData = specialDataList.get(specialAttackConfigIndex);
+
+        if (selectedSpecialData.get("gear") != null && selectedSpecialData.get("combatStyle") != null) {
+            int combatStyle = (int) selectedSpecialData.get("combatStyle");
+
+            ((java.util.List<Integer>) selectedSpecialData.get("gear")).forEach(itemId -> {
+                if (v.getInventory().hasIn(itemId)) {
+                    v.getInventory().equip(itemId);
+                    try {
+                        v.sleep(100, 300);
+                    } catch (Exception ignored) {}
+                }
+            });
+
+            prayers.entrySet().stream()
+                .filter(e -> (boolean) e.getValue().get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) e.getValue().get("unlockLevel"))
+                .max(java.util.Comparator.comparingInt(e -> (int) e.getValue().get("unlockLevel")))
+                .ifPresent(e -> v.getPrayer().prayOn(e.getKey()));
+
+            v.getCombat().spec(1);
+            v.getCombat().attackTarget();
+        }
+    }
+}
