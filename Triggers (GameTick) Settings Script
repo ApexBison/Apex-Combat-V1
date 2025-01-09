@@ -1,0 +1,62 @@
+import java.util.*;
+import net.runelite.api.Prayer;
+import net.runelite.api.Spell;
+
+Object meleeGear = Arrays.asList(26233, 29801);
+Object rangeGear = Arrays.asList(26374, 22249, 12817, 27241, 27229);
+Object mageGear = Arrays.asList(12904, 12817, 19720, 26243, 26245);
+
+Object spellDataList = Arrays.asList(
+    createSpellData(Spell.ICE_BARRAGE, 94, "Ancient"),
+    createSpellData(Spell.BLOOD_BARRAGE, 92, "Ancient"),
+    createSpellData(Spell.SMOKE_BARRAGE, 86, "Ancient"),
+    createSpellData(Spell.SHADOW_BARRAGE, 88, "Ancient"),
+    createSpellData(Spell.BLOOD_BLITZ, 80, "Ancient"),
+    createSpellData(Spell.SMOKE_BLITZ, 74, "Ancient"),
+    createSpellData(Spell.SHADOW_BLITZ, 76, "Ancient"),
+    createSpellData(Spell.ICE_BLITZ, 82, "Ancient")
+);
+
+Object specialData = Arrays.asList(
+    createSpecialData(Arrays.asList(26233, 29801), 0),
+    createSpecialData(Arrays.asList(24225, 29801), 0),
+    createSpecialData(Arrays.asList(13652, 29801), 0)
+);
+
+Object prayers = Map.of(
+    Prayer.PIETY, createPrayerData(true, 70),
+    Prayer.ULTIMATE_STRENGTH, createPrayerData(true, 60),
+    Prayer.RIGOUR, createPrayerData(true, 74),
+    Prayer.EAGLE_EYE, createPrayerData(true, 44),
+    Prayer.AUGURY, createPrayerData(true, 77),
+    Prayer.MYSTIC_MIGHT, createPrayerData(true, 45)
+);
+
+if (!meleeGear.equals(v.getVars().getObj("meleeGear"))) v.getVars().setObj("meleeGear", meleeGear);
+if (!rangeGear.equals(v.getVars().getObj("rangeGear"))) v.getVars().setObj("rangeGear", rangeGear);
+if (!mageGear.equals(v.getVars().getObj("mageGear"))) v.getVars().setObj("mageGear", mageGear);
+if (!spellDataList.equals(v.getVars().getObj("spellDataList"))) v.getVars().setObj("spellDataList", spellDataList);
+if (!specialData.equals(v.getVars().getObj("specialData"))) v.getVars().setObj("specialData", specialData);
+if (!prayers.equals(v.getVars().getObj("prayers"))) v.getVars().setObj("prayers", prayers);
+
+Map<String, Object> createSpellData(Spell spell, int requiredLevel, String spellbook) {
+    Map<String, Object> spellData = new HashMap<>();
+    spellData.put("spell", spell);
+    spellData.put("requiredLevel", requiredLevel);
+    spellData.put("spellbook", spellbook);
+    return spellData;
+}
+
+Map<String, Object> createSpecialData(List<Integer> gear, int combatStyle) {
+    Map<String, Object> specialData = new HashMap<>();
+    specialData.put("gear", gear);
+    specialData.put("combatStyle", combatStyle);
+    return specialData;
+}
+
+Map<String, Object> createPrayerData(boolean isUnlocked, int unlockLevel) {
+    Map<String, Object> prayerData = new HashMap<>();
+    prayerData.put("isUnlocked", isUnlocked);
+    prayerData.put("unlockLevel", unlockLevel);
+    return prayerData;
+}
