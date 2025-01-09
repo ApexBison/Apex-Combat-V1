@@ -1,0 +1,3 @@
+if (v.getCombat().isOpponentFrozen()) {
+	v.getCombat().walkUnderTarget();
+}
