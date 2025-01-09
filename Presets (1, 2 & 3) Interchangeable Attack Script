@@ -1,0 +1,57 @@
+import java.util.*;
+import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
+import net.runelite.api.Spell;
+
+int attackStyle = 0; // 0 = Melee, 1 = Range, 2 = Mage
+
+Object meleeGear = v.getVars().getObj("meleeGear");
+Object rangeGear = v.getVars().getObj("rangeGear");
+Object mageGear = v.getVars().getObj("mageGear");
+Object spellData = v.getVars().getObj("spellDataList");
+Object prayersObj = v.getVars().getObj("prayers");
+
+java.util.Map<Prayer, java.util.Map<String, Object>> prayers = (prayersObj instanceof Map) ? (java.util.Map<Prayer, java.util.Map<String, Object>>) prayersObj : new HashMap<>();
+
+java.util.List<Integer> gear = null;
+
+if (attackStyle == 2 && mageGear instanceof List) {
+    gear = (java.util.List<Integer>) mageGear;
+} else if (attackStyle == 1 && rangeGear instanceof List) {
+    gear = (java.util.List<Integer>) rangeGear;
+} else if (attackStyle == 0 && meleeGear instanceof List) {
+    gear = (java.util.List<Integer>) meleeGear;
+}
+
+if (gear != null) {
+    gear.forEach(itemId -> {
+        if (v.getInventory().hasIn(itemId)) {
+            v.getInventory().equip(itemId);
+            try {
+                v.sleep(100, 300);
+            } catch (Exception ignored) {}
+        }
+    });
+
+    prayers.entrySet().stream()
+        .filter(e -> (boolean) e.getValue().get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) e.getValue().get("unlockLevel"))
+        .max(java.util.Comparator.comparingInt(e -> (int) e.getValue().get("unlockLevel")))
+        .ifPresent(e -> v.getPrayer().prayOn(e.getKey()));
+
+    if (attackStyle == 2) {
+        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
+        java.util.List<java.util.Map<String, Object>> spells = (java.util.List<java.util.Map<String, Object>>) spellData;
+
+        spells.stream()
+            .filter(spell -> boostedMagicLevel >= (int) spell.get("requiredLevel"))
+            .findFirst()
+            .ifPresent(spell -> {
+                v.getCombat().spell((Spell) spell.get("spell"));
+                v.getCombat().castTarget();
+            });
+    } else {
+        if (!v.getCombat().isInCombat()) {
+            v.getCombat().attackTarget();
+        }
+    }
+}
