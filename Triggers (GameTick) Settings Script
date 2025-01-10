@@ -1,53 +1,70 @@
 import java.util.*;
 import net.runelite.api.Prayer;
-import net.runelite.api.Skill;
 import net.runelite.api.Spell;
 
-Object specialData = v.getVars().getObj("specialData");
-Object prayersObj = v.getVars().getObj("prayers");
+Object meleeGear = Arrays.asList(11802);
+Object rangeGear = Arrays.asList(29000);
+Object mageGear = Arrays.asList(12904, 12817, 19720, 26243, 26245);
 
-int specialAttackConfigIndex = 1; 
-boolean castVengeance = false;
+Object spellDataList = Arrays.asList(
+    createSpellData(Spell.ICE_BARRAGE, 94, "Ancient"),
+    createSpellData(Spell.BLOOD_BARRAGE, 92, "Ancient"),
+    createSpellData(Spell.SMOKE_BARRAGE, 86, "Ancient"),
+    createSpellData(Spell.SHADOW_BARRAGE, 88, "Ancient"),
+    createSpellData(Spell.BLOOD_BLITZ, 80, "Ancient"),
+    createSpellData(Spell.SMOKE_BLITZ, 74, "Ancient"),
+    createSpellData(Spell.SHADOW_BLITZ, 76, "Ancient"),
+    createSpellData(Spell.ICE_BLITZ, 82, "Ancient")
+);
 
-if (specialData != null && prayersObj instanceof Map) {
-    java.util.List<java.util.Map<String, Object>> specialDataList = (java.util.List<java.util.Map<String, Object>>) specialData;
-    java.util.Map<String, java.util.List<java.util.Map<String, Object>>> prayers = (java.util.Map<String, java.util.List<java.util.Map<String, Object>>>) prayersObj;
+Object specialData = Arrays.asList(
+    createSpecialData(Arrays.asList(26233, 29801), 0),
+    createSpecialData(Arrays.asList(24225, 29801), 0),
+    createSpecialData(Arrays.asList(11802), 0)
+);
 
-    if (specialAttackConfigIndex >= 0 && specialAttackConfigIndex < specialDataList.size()) {
-        java.util.Map<String, Object> selectedSpecialData = specialDataList.get(specialAttackConfigIndex);
+Object prayers = Map.of(
+    "MELEE", Arrays.asList(
+        createPrayerData(Prayer.PIETY, true, 70),
+        createPrayerData(Prayer.INCREDIBLE_REFLEXES, true, 31),
+        createPrayerData(Prayer.ULTIMATE_STRENGTH, true, 31)
+    ),
+    "RANGE", Arrays.asList(
+        createPrayerData(Prayer.RIGOUR, true, 74),
+        createPrayerData(Prayer.EAGLE_EYE, true, 44)
+    ),
+    "MAGE", Arrays.asList(
+        createPrayerData(Prayer.AUGURY, true, 77),
+        createPrayerData(Prayer.MYSTIC_MIGHT, true, 45)
+    )
+);
 
-        if (selectedSpecialData.get("gear") != null && selectedSpecialData.get("combatStyle") != null) {
-            int combatStyle = (int) selectedSpecialData.get("combatStyle");
+if (!meleeGear.equals(v.getVars().getObj("meleeGear"))) v.getVars().setObj("meleeGear", meleeGear);
+if (!rangeGear.equals(v.getVars().getObj("rangeGear"))) v.getVars().setObj("rangeGear", rangeGear);
+if (!mageGear.equals(v.getVars().getObj("mageGear"))) v.getVars().setObj("mageGear", mageGear);
+if (!spellDataList.equals(v.getVars().getObj("spellDataList"))) v.getVars().setObj("spellDataList", spellDataList);
+if (!specialData.equals(v.getVars().getObj("specialData"))) v.getVars().setObj("specialData", specialData);
+if (!prayers.equals(v.getVars().getObj("prayers"))) v.getVars().setObj("prayers", prayers);
 
-            ((java.util.List<Integer>) selectedSpecialData.get("gear")).forEach(itemId -> {
-                if (v.getInventory().hasIn(itemId)) {
-                    v.getInventory().equip(itemId);
-                    try {
-                        v.sleep(100, 300);
-                    } catch (Exception ignored) {}
-                }
-            });
+Map<String, Object> createSpellData(Spell spell, int requiredLevel, String spellbook) {
+    Map<String, Object> spellData = new HashMap<>();
+    spellData.put("spell", spell);
+    spellData.put("requiredLevel", requiredLevel);
+    spellData.put("spellbook", spellbook);
+    return spellData;
+}
 
-            String styleKey = combatStyle == 0 ? "MELEE" : combatStyle == 1 ? "RANGE" : "MAGE";
-            java.util.List<java.util.Map<String, Object>> stylePrayers = prayers.get(styleKey);
+Map<String, Object> createSpecialData(List<Integer> gear, int combatStyle) {
+    Map<String, Object> specialData = new HashMap<>();
+    specialData.put("gear", gear);
+    specialData.put("combatStyle", combatStyle);
+    return specialData;
+}
 
-            if (stylePrayers != null) {
-                stylePrayers.stream()
-                    .filter(prayer -> (boolean) prayer.get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
-                    .max(Comparator.comparingInt(prayer -> (int) prayer.get("unlockLevel")))
-                    .ifPresent(prayer -> v.getPrayer().prayOn((Prayer) prayer.get("prayer")));
-            }
-
-            if (castVengeance) {
-                int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
-                if (boostedMagicLevel >= 94) {
-                    v.getCombat().spell(Spell.VENGEANCE);
-                    v.getCombat().castTarget();
-                }
-            }
-
-            v.getCombat().spec(1);
-            v.getCombat().attackTarget();
-        }
-    }
+Map<String, Object> createPrayerData(Prayer prayer, boolean isUnlocked, int unlockLevel) {
+    Map<String, Object> prayerData = new HashMap<>();
+    prayerData.put("prayer", prayer);
+    prayerData.put("isUnlocked", isUnlocked);
+    prayerData.put("unlockLevel", unlockLevel);
+    return prayerData;
 }
