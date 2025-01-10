@@ -11,8 +11,6 @@ Object mageGear = v.getVars().getObj("mageGear");
 Object spellData = v.getVars().getObj("spellDataList");
 Object prayersObj = v.getVars().getObj("prayers");
 
-java.util.Map<Prayer, java.util.Map<String, Object>> prayers = (prayersObj instanceof Map) ? (java.util.Map<Prayer, java.util.Map<String, Object>>) prayersObj : new HashMap<>();
-
 java.util.List<Integer> gear = null;
 
 if (attackStyle == 2 && mageGear instanceof List) {
@@ -33,10 +31,18 @@ if (gear != null) {
         }
     });
 
-    prayers.entrySet().stream()
-        .filter(e -> (boolean) e.getValue().get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) e.getValue().get("unlockLevel"))
-        .max(java.util.Comparator.comparingInt(e -> (int) e.getValue().get("unlockLevel")))
-        .ifPresent(e -> v.getPrayer().prayOn(e.getKey()));
+    if (prayersObj instanceof Map) {
+        String combatStyleKey = attackStyle == 0 ? "MELEE" : attackStyle == 1 ? "RANGE" : "MAGE";
+        java.util.List<java.util.Map<String, Object>> combatPrayers = (java.util.List<java.util.Map<String, Object>>)
+            ((Map<String, Object>) prayersObj).get(combatStyleKey);
+
+        if (combatPrayers != null) {
+            combatPrayers.stream()
+                .filter(prayer -> (boolean) prayer.get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
+                .max(java.util.Comparator.comparingInt(prayer -> (int) prayer.get("unlockLevel")))
+                .ifPresent(prayer -> v.getPrayer().prayOn((Prayer) prayer.get("prayer")));
+        }
+    }
 
     if (attackStyle == 2) {
         int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
