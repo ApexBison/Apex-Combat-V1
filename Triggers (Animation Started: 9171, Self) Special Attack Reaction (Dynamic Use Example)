@@ -6,7 +6,7 @@ import net.runelite.api.Spell;
 Object specialData = v.getVars().getObj("specialData");
 Object prayersObj = v.getVars().getObj("prayers");
 
-int specialAttackConfigIndex = 2; 
+int specialAttackConfigIndex = 1; 
 boolean castVengeance = false;
 
 if (specialData != null && prayersObj instanceof Map) {
