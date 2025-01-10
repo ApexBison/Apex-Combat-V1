@@ -1,14 +1,17 @@
 import java.util.*;
 import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
+import net.runelite.api.Spell;
 
 Object specialData = v.getVars().getObj("specialData");
 Object prayersObj = v.getVars().getObj("prayers");
 
-int specialAttackConfigIndex = 1; // Find config for this in settings.
+int specialAttackConfigIndex = 2; 
+boolean castVengeance = false;
 
 if (specialData != null && prayersObj instanceof Map) {
     java.util.List<java.util.Map<String, Object>> specialDataList = (java.util.List<java.util.Map<String, Object>>) specialData;
-    java.util.Map<Prayer, java.util.Map<String, Object>> prayers = (java.util.Map<Prayer, java.util.Map<String, Object>>) prayersObj;
+    java.util.Map<String, java.util.List<java.util.Map<String, Object>>> prayers = (java.util.Map<String, java.util.List<java.util.Map<String, Object>>>) prayersObj;
 
     if (specialAttackConfigIndex >= 0 && specialAttackConfigIndex < specialDataList.size()) {
         java.util.Map<String, Object> selectedSpecialData = specialDataList.get(specialAttackConfigIndex);
@@ -25,10 +28,23 @@ if (specialData != null && prayersObj instanceof Map) {
                 }
             });
 
-            prayers.entrySet().stream()
-                .filter(e -> (boolean) e.getValue().get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) e.getValue().get("unlockLevel"))
-                .max(java.util.Comparator.comparingInt(e -> (int) e.getValue().get("unlockLevel")))
-                .ifPresent(e -> v.getPrayer().prayOn(e.getKey()));
+            String styleKey = combatStyle == 0 ? "MELEE" : combatStyle == 1 ? "RANGE" : "MAGE";
+            java.util.List<java.util.Map<String, Object>> stylePrayers = prayers.get(styleKey);
+
+            if (stylePrayers != null) {
+                stylePrayers.stream()
+                    .filter(prayer -> (boolean) prayer.get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
+                    .max(Comparator.comparingInt(prayer -> (int) prayer.get("unlockLevel")))
+                    .ifPresent(prayer -> v.getPrayer().prayOn((Prayer) prayer.get("prayer")));
+            }
+
+            if (castVengeance) {
+                int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
+                if (boostedMagicLevel >= 94) {
+                    v.getCombat().spell(Spell.VENGEANCE);
+                    v.getCombat().castTarget();
+                }
+            }
 
             v.getCombat().spec(1);
             v.getCombat().attackTarget();
