@@ -91,8 +91,8 @@ if (gear != null) {
                 v.getCombat().castTarget();                        // Cast the spell on the target.
             });
     } else { // Melee or Range Attack
-        // If not currently in combat, initiate an attack on the target.
-        if (!v.getCombat().isInCombat()) {
+        // Attack target.
+        if (v.getCombat().isInCombat()) {
             v.getCombat().attackTarget();
         }
     }
