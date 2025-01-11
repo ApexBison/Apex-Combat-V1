@@ -3,51 +3,80 @@ import net.runelite.api.Prayer;
 import net.runelite.api.Skill;
 import net.runelite.api.Spell;
 
+/**
+ * Special Attack Combat Script for Old School RuneScape (OSRS)
+ * 
+ * Author: Apex
+ * 
+ * This script automates special combat actions based on predefined configurations.
+ * 
+ * Functionality:
+ * 1. Equips the appropriate gear based on the selected special attack configuration.
+ * 2. Activates the highest unlocked prayer relevant to the combat style.
+ * 3. Optionally casts the Vengeance spell if enabled and requirements are met.
+ * 4. Executes the special attack.
+ */
+
+// Retrieve special attack data and prayers configurations from variables storage.
 Object specialData = v.getVars().getObj("specialData");
 Object prayersObj = v.getVars().getObj("prayers");
 
-int specialAttackConfigIndex = 1; 
+// Define the special attack configuration index and toggle for casting Vengeance.
+int specialAttackConfigIndex = 0;
 boolean castVengeance = false;
 
+// Check if specialData and prayersObj are properly retrieved.
 if (specialData != null && prayersObj instanceof Map) {
-    java.util.List<java.util.Map<String, Object>> specialDataList = (java.util.List<java.util.Map<String, Object>>) specialData;
-    java.util.Map<String, java.util.List<java.util.Map<String, Object>>> prayers = (java.util.Map<String, java.util.List<java.util.Map<String, Object>>>) prayersObj;
+    List<Map<String, Object>> specialDataList = (List<Map<String, Object>>) specialData;
+    Map<String, List<Map<String, Object>>> prayers = (Map<String, List<Map<String, Object>>>) prayersObj;
 
+    // Ensure the configuration index is within bounds.
     if (specialAttackConfigIndex >= 0 && specialAttackConfigIndex < specialDataList.size()) {
-        java.util.Map<String, Object> selectedSpecialData = specialDataList.get(specialAttackConfigIndex);
+        Map<String, Object> selectedSpecialData = specialDataList.get(specialAttackConfigIndex);
 
+        // Check if both gear and combatStyle are defined in the selected configuration.
         if (selectedSpecialData.get("gear") != null && selectedSpecialData.get("combatStyle") != null) {
             int combatStyle = (int) selectedSpecialData.get("combatStyle");
 
-            ((java.util.List<Integer>) selectedSpecialData.get("gear")).forEach(itemId -> {
-                if (v.getInventory().hasIn(itemId)) {
-                    v.getInventory().equip(itemId);
+            // Equip each item in the gear list if present in the inventory.
+            ((List<Integer>) selectedSpecialData.get("gear")).forEach(itemId -> {
+                if (v.getInventory().hasIn(itemId)) { // Check if the item is in the inventory.
+                    v.getInventory().equip(itemId);    // Equip the item.
                     try {
-                        v.sleep(100, 300);
-                    } catch (Exception ignored) {}
+                        v.sleep(100, 300);            // Wait between 100 to 300 milliseconds to mimic human behavior.
+                    } catch (Exception ignored) {
+                        // Silently ignore any exceptions during sleep.
+                    }
                 }
             });
 
+            // Determine the key corresponding to the current combat style.
             String styleKey = combatStyle == 0 ? "MELEE" : combatStyle == 1 ? "RANGE" : "MAGE";
-            java.util.List<java.util.Map<String, Object>> stylePrayers = prayers.get(styleKey);
+
+            // Retrieve the list of prayers applicable to the combat style.
+            List<Map<String, Object>> stylePrayers = prayers.get(styleKey);
 
             if (stylePrayers != null) {
+                // Stream through the prayers to find the highest unlocked one that meets the Prayer level requirement.
                 stylePrayers.stream()
-                    .filter(prayer -> (boolean) prayer.get("isUnlocked") && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
+                    .filter(prayer -> (boolean) prayer.get("isUnlocked") 
+                                     && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
                     .max(Comparator.comparingInt(prayer -> (int) prayer.get("unlockLevel")))
                     .ifPresent(prayer -> v.getPrayer().prayOn((Prayer) prayer.get("prayer")));
             }
 
+            // Optionally cast the Vengeance spell if enabled and requirements are met.
             if (castVengeance) {
                 int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
                 if (boostedMagicLevel >= 94) {
-                    v.getCombat().spell(Spell.VENGEANCE);
-                    v.getCombat().castTarget();
+                    v.getCombat().spell(Spell.VENGEANCE); // Select the Vengeance spell.
+                    v.getCombat().castTarget();             // Cast the spell on the target.
                 }
             }
 
-            v.getCombat().spec(1);
-            v.getCombat().attackTarget();
+            // Execute the special attack.
+            v.getCombat().spec(1);          // Activate special attack.
+            v.getCombat().attackTarget();   // Attack the target after special attack.
         }
     }
 }
