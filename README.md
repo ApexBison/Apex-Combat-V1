@@ -14,4 +14,3 @@ Please understand that these scripts must be configured properly for whatever se
 - **Automatic Gear Equipping:** Equip the appropriate gear based on your selected combat style.
 - **Prayer Activation:** Activate the highest available prayer relevant to your combat style.
 - **Special Attack Handling:** Execute special attacks with configurable gear setups.
-- **VSwitcher V4 Integration:** Seamlessly integrates with the VSwitcher V4 plugin for optimal performance.
