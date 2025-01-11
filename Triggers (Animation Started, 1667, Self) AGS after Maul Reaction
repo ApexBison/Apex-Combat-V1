@@ -1,1 +1,100 @@
 
+import java.util.*;
+import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
+import net.runelite.api.Spell;
+
+/**
+ * Combat Automation Script for Old School RuneScape (OSRS)
+ * 
+ * Author: Apex
+ * 
+ * This script automates combat actions based on the selected attack style:
+ * 0 - Melee
+ * 1 - Range
+ * 2 - Mage
+ * 
+ * Functionality:
+ * 1. Equips the appropriate gear based on the attack style.
+ * 2. Activates the highest unlocked and applicable prayer for the combat style.
+ * 3. Executes the corresponding attack:
+ *    - For Mage: Casts the first available spell that meets the Magic level requirement.
+ *    - For Melee/Range: Initiates a standard attack if not already in combat.
+ */
+
+// Define the current attack style.
+// 0 = Melee, 1 = Range, 2 = Mage
+int attackStyle = 0;
+
+// Retrieve gear configurations from variables storage.
+Object meleeGear = v.getVars().getObj("meleeGear");
+Object rangeGear = v.getVars().getObj("rangeGear");
+Object mageGear = v.getVars().getObj("mageGear");
+
+// Retrieve spell data and prayers configurations.
+Object spellData = v.getVars().getObj("spellDataList");
+Object prayersObj = v.getVars().getObj("prayers");
+
+// Initialize the gear list based on the selected attack style.
+List<Integer> gear = null;
+
+if (attackStyle == 2 && mageGear instanceof List) {
+    gear = (List<Integer>) mageGear;
+} else if (attackStyle == 1 && rangeGear instanceof List) {
+    gear = (List<Integer>) rangeGear;
+} else if (attackStyle == 0 && meleeGear instanceof List) {
+    gear = (List<Integer>) meleeGear;
+}
+
+// If gear is defined, iterate through each item ID to equip.
+if (gear != null) {
+    gear.forEach(itemId -> {
+        if (v.getInventory().hasIn(itemId)) { // Check if the item is in the inventory.
+            v.getInventory().equip(itemId);    // Equip the item.
+            try {
+                v.sleep(100, 300);            // Wait between 100 to 300 milliseconds to mimic human behavior.
+            } catch (Exception ignored) {
+                // Silently ignore any exceptions during sleep.
+            }
+        }
+    });
+
+    // Handle prayer activation based on the combat style.
+    if (prayersObj instanceof Map) {
+        // Determine the key corresponding to the current combat style.
+        String combatStyleKey = attackStyle == 0 ? "MELEE" : attackStyle == 1 ? "RANGE" : "MAGE";
+
+        // Retrieve the list of prayers applicable to the combat style.
+        List<Map<String, Object>> combatPrayers = (List<Map<String, Object>>)
+            ((Map<String, Object>) prayersObj).get(combatStyleKey);
+
+        if (combatPrayers != null) {
+            // Stream through the prayers to find the highest unlocked one that meets the Prayer level requirement.
+            combatPrayers.stream()
+                .filter(prayer -> (boolean) prayer.get("isUnlocked") 
+                                 && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
+                .max(Comparator.comparingInt(prayer -> (int) prayer.get("unlockLevel")))
+                .ifPresent(prayer -> v.getPrayer().prayOn((Prayer) prayer.get("prayer")));
+        }
+    }
+
+    // Execute the attack based on the attack style.
+    if (attackStyle == 2) { // Mage Attack
+        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC); // Current boosted Magic level.
+        List<Map<String, Object>> spells = (List<Map<String, Object>>) spellData;
+
+        // Stream through the spells to find the first one that meets the Magic level requirement.
+        spells.stream()
+            .filter(spell -> boostedMagicLevel >= (int) spell.get("requiredLevel"))
+            .findFirst()
+            .ifPresent(spell -> {
+                v.getCombat().spell((Spell) spell.get("spell")); // Select the spell.
+                v.getCombat().castTarget();                        // Cast the spell on the target.
+            });
+    } else { // Melee or Range Attack
+        // If not currently in combat, initiate an attack on the target.
+        if (!v.getCombat().isInCombat()) {
+            v.getCombat().attackTarget();
+        }
+    }
+}
