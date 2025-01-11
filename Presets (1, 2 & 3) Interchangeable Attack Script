@@ -4,14 +4,16 @@ import net.runelite.api.Skill;
 import net.runelite.api.Spell;
 
 /**
- * This script automates combat actions in Old School RuneScape (OSRS) based on the selected attack style.
+ * Combat Automation Script for Old School RuneScape (OSRS)
  * 
- * Attack Styles:
+ * Author: Apex
+ * 
+ * This script automates combat actions based on the selected attack style:
  * 0 - Melee
  * 1 - Range
  * 2 - Mage
  * 
- * The script performs the following actions:
+ * Functionality:
  * 1. Equips the appropriate gear based on the attack style.
  * 2. Activates the highest unlocked and applicable prayer for the combat style.
  * 3. Executes the corresponding attack:
@@ -59,9 +61,7 @@ if (gear != null) {
     // Handle prayer activation based on the combat style.
     if (prayersObj instanceof Map) {
         // Determine the key corresponding to the current combat style.
-        String combatStyleKey = (attackStyle == 0) ? "MELEE" 
-                              : (attackStyle == 1) ? "RANGE" 
-                              : "MAGE";
+        String combatStyleKey = attackStyle == 0 ? "MELEE" : attackStyle == 1 ? "RANGE" : "MAGE";
 
         // Retrieve the list of prayers applicable to the combat style.
         List<Map<String, Object>> combatPrayers = (List<Map<String, Object>>)
