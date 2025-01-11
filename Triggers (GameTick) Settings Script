@@ -1,11 +1,39 @@
 import java.util.*;
 import net.runelite.api.Prayer;
+import net.runelite.api.Skill;
 import net.runelite.api.Spell;
 
+/**
+ * Combat Configuration Script for Old School RuneScape (OSRS)
+ * 
+ * Author: Apex
+ * 
+ * This script sets up and synchronizes combat-related configurations such as gear,
+ * spells, special attacks, and prayers. It ensures that the game's variables
+ * (`v.getVars()`) are populated with the latest configurations.
+ * 
+ * Functionality:
+ * 1. Defines gear sets for Melee, Range, and Mage combat styles.
+ * 2. Defines a list of spells with their required levels and spellbooks.
+ * 3. Defines special attack configurations.
+ * 4. Defines prayers for each combat style with their unlock statuses and levels.
+ * 5. Synchronizes the defined configurations with the game's variables storage.
+ */
+
+// ---------- Define Gear Sets ----------
+
+// Melee Gear: List of item IDs for Melee combat.
 Object meleeGear = Arrays.asList(11802);
-Object rangeGear = Arrays.asList(29000);
+
+// Range Gear: List of item IDs for Range combat.
+Object rangeGear = Arrays.asList(29000, 12788);
+
+// Mage Gear: List of item IDs for Mage combat.
 Object mageGear = Arrays.asList(12904, 12817, 19720, 26243, 26245);
 
+// ---------- Define Spell Data ----------
+
+// List of spells with their required Magic levels and associated spellbooks.
 Object spellDataList = Arrays.asList(
     createSpellData(Spell.ICE_BARRAGE, 94, "Ancient"),
     createSpellData(Spell.BLOOD_BARRAGE, 92, "Ancient"),
@@ -17,12 +45,17 @@ Object spellDataList = Arrays.asList(
     createSpellData(Spell.ICE_BLITZ, 82, "Ancient")
 );
 
+// ---------- Define Special Attack Configurations ----------
+
+// List of special attack configurations, each with its own gear set and combat style.
 Object specialData = Arrays.asList(
-    createSpecialData(Arrays.asList(26233, 29801), 0),
-    createSpecialData(Arrays.asList(24225, 29801), 0),
+    createSpecialData(Arrays.asList(24225), 0),
     createSpecialData(Arrays.asList(11802), 0)
 );
 
+// ---------- Define Prayers ----------
+
+// Map of combat styles to their respective prayers, including unlock statuses and required levels.
 Object prayers = Map.of(
     "MELEE", Arrays.asList(
         createPrayerData(Prayer.PIETY, true, 70),
@@ -39,13 +72,48 @@ Object prayers = Map.of(
     )
 );
 
-if (!meleeGear.equals(v.getVars().getObj("meleeGear"))) v.getVars().setObj("meleeGear", meleeGear);
-if (!rangeGear.equals(v.getVars().getObj("rangeGear"))) v.getVars().setObj("rangeGear", rangeGear);
-if (!mageGear.equals(v.getVars().getObj("mageGear"))) v.getVars().setObj("mageGear", mageGear);
-if (!spellDataList.equals(v.getVars().getObj("spellDataList"))) v.getVars().setObj("spellDataList", spellDataList);
-if (!specialData.equals(v.getVars().getObj("specialData"))) v.getVars().setObj("specialData", specialData);
-if (!prayers.equals(v.getVars().getObj("prayers"))) v.getVars().setObj("prayers", prayers);
+// ---------- Synchronize Configurations with Game Variables ----------
 
+// Check and update Melee Gear configuration.
+if (!meleeGear.equals(v.getVars().getObj("meleeGear"))) {
+    v.getVars().setObj("meleeGear", meleeGear);
+}
+
+// Check and update Range Gear configuration.
+if (!rangeGear.equals(v.getVars().getObj("rangeGear"))) {
+    v.getVars().setObj("rangeGear", rangeGear);
+}
+
+// Check and update Mage Gear configuration.
+if (!mageGear.equals(v.getVars().getObj("mageGear"))) {
+    v.getVars().setObj("mageGear", mageGear);
+}
+
+// Check and update Spell Data configuration.
+if (!spellDataList.equals(v.getVars().getObj("spellDataList"))) {
+    v.getVars().setObj("spellDataList", spellDataList);
+}
+
+// Check and update Special Attack configuration.
+if (!specialData.equals(v.getVars().getObj("specialData"))) {
+    v.getVars().setObj("specialData", specialData);
+}
+
+// Check and update Prayers configuration.
+if (!prayers.equals(v.getVars().getObj("prayers"))) {
+    v.getVars().setObj("prayers", prayers);
+}
+
+// ---------- Helper Methods ----------
+
+/**
+ * Creates a map representing spell data.
+ * 
+ * @param spell The Spell enum representing the spell.
+ * @param requiredLevel The Magic level required to cast the spell.
+ * @param spellbook The spellbook to which the spell belongs.
+ * @return A map containing spell information.
+ */
 Map<String, Object> createSpellData(Spell spell, int requiredLevel, String spellbook) {
     Map<String, Object> spellData = new HashMap<>();
     spellData.put("spell", spell);
@@ -54,6 +122,13 @@ Map<String, Object> createSpellData(Spell spell, int requiredLevel, String spell
     return spellData;
 }
 
+/**
+ * Creates a map representing special attack data.
+ * 
+ * @param gear The list of item IDs required for the special attack.
+ * @param combatStyle The combat style index (0 = Melee, 1 = Range, 2 = Mage).
+ * @return A map containing special attack configuration.
+ */
 Map<String, Object> createSpecialData(List<Integer> gear, int combatStyle) {
     Map<String, Object> specialData = new HashMap<>();
     specialData.put("gear", gear);
@@ -61,6 +136,14 @@ Map<String, Object> createSpecialData(List<Integer> gear, int combatStyle) {
     return specialData;
 }
 
+/**
+ * Creates a map representing prayer data.
+ * 
+ * @param prayer The Prayer enum to activate.
+ * @param isUnlocked A boolean indicating if the prayer is unlocked.
+ * @param unlockLevel The Prayer level required to activate the prayer.
+ * @return A map containing prayer information.
+ */
 Map<String, Object> createPrayerData(Prayer prayer, boolean isUnlocked, int unlockLevel) {
     Map<String, Object> prayerData = new HashMap<>();
     prayerData.put("prayer", prayer);
