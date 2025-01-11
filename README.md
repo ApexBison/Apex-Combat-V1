@@ -4,7 +4,7 @@
 
 ## Overview
 
-These scripts are designed to automate combat actions in **Old School RuneScape (OSRS)**, specifically tailored for the [VSwticher V4](https://github.com/VSwticher/VSwticherV4) plugin. They handle gear swapping, prayer activation, and special attacks to streamline your combat experience.
+These scripts are designed to automate combat actions in **Old School RuneScape (OSRS)**, specifically made for VSwitcher V4. They handle gear swapping, prayer activation, and special attacks to streamline your combat experience.
 
 ## Features
 
