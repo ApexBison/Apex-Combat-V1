@@ -16,14 +16,21 @@ import net.runelite.api.Spell;
  * Functionality:
  * 1. Equips the appropriate gear based on the attack style.
  * 2. Activates the highest unlocked and applicable prayer for the combat style.
- * 3. Executes the corresponding attack:
+ * 3. Optionally casts the Vengeance spell prior to attacking the target.
+ * 4. Executes the corresponding attack:
  *    - For Mage: Casts the first available spell that meets the Magic level requirement.
- *    - For Melee/Range: Initiates a standard attack if not already in combat.
+ *    - For Melee/Range: Initiates a standard attack if already in combat.
  */
+
+// Initialize random number generator for future use if needed
+Random rand = new Random();
 
 // Define the current attack style.
 // 0 = Melee, 1 = Range, 2 = Mage
 int attackStyle = 0;
+
+// Optional boolean to enable casting Vengeance prior to attacking
+boolean castVengeance = false; // Set to 'true' to enable casting Vengeance
 
 // Retrieve gear configurations from variables storage.
 Object meleeGear = v.getVars().getObj("meleeGear");
@@ -77,6 +84,15 @@ if (gear != null) {
         }
     }
 
+    // Optionally cast the Vengeance spell if enabled and requirements are met.
+    if (castVengeance) {
+        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC); // Current boosted Magic level.
+        if (boostedMagicLevel >= 94) { // Vengeance requires Magic level 94
+            v.getCombat().spell(Spell.VENGEANCE); // Select the Vengeance spell.
+            v.getCombat().castTarget();             // Cast the spell on target but really self lol.
+        }
+    }
+
     // Execute the attack based on the attack style.
     if (attackStyle == 2) { // Mage Attack
         int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC); // Current boosted Magic level.
@@ -91,7 +107,7 @@ if (gear != null) {
                 v.getCombat().castTarget();                        // Cast the spell on the target.
             });
     } else { // Melee or Range Attack
-        // Attack target.
+        // Attack target if already in combat.
         if (v.getCombat().isInCombat()) {
             v.getCombat().attackTarget();
         }
