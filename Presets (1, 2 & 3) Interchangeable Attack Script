@@ -20,6 +20,7 @@ import net.runelite.api.Spell;
  * 4. Executes the corresponding attack:
  *    - For Mage: Casts the first available spell that meets the Magic level requirement.
  *    - For Melee/Range: Initiates a standard attack if already in combat.
+ * 5. Optionally overrides the current spell selection with a specified spell.
  */
 
 // Initialize random number generator for future use if needed
@@ -31,6 +32,14 @@ int attackStyle = 0;
 
 // Optional boolean to enable casting Vengeance prior to attacking
 boolean castVengeance = false; // Set to 'true' to enable casting Vengeance
+
+// *** Override Spell Functionality ***
+// Optional boolean to enable overriding the current spell selection
+boolean overrideSpellEnabled = false; // Set to 'true' to enable spell override
+
+// String representing the spell to override with
+String overrideSpellName = "<col=00ff00>Greater Corruption</col>"; // Customize as needed
+// *** End of Override Spell Functionality ***
 
 // Retrieve gear configurations from variables storage.
 Object meleeGear = v.getVars().getObj("meleeGear");
@@ -55,27 +64,22 @@ if (attackStyle == 2 && mageGear instanceof List) {
 // If gear is defined, iterate through each item ID to equip.
 if (gear != null) {
     gear.forEach(itemId -> {
-        if (v.getInventory().hasIn(itemId)) { // Check if the item is in the inventory.
-            v.getInventory().equip(itemId);    // Equip the item.
+        if (v.getInventory().hasIn(itemId)) {
+            v.getInventory().equip(itemId);
             try {
-                v.sleep(100, 300);            // Wait between 100 to 300 milliseconds to mimic human behavior.
+                v.sleep(100, 300);
             } catch (Exception ignored) {
-                // Silently ignore any exceptions during sleep.
             }
         }
     });
 
     // Handle prayer activation based on the combat style.
     if (prayersObj instanceof Map) {
-        // Determine the key corresponding to the current combat style.
         String combatStyleKey = attackStyle == 0 ? "MELEE" : attackStyle == 1 ? "RANGE" : "MAGE";
-
-        // Retrieve the list of prayers applicable to the combat style.
         List<Map<String, Object>> combatPrayers = (List<Map<String, Object>>)
             ((Map<String, Object>) prayersObj).get(combatStyleKey);
 
         if (combatPrayers != null) {
-            // Stream through the prayers to find the highest unlocked one that meets the Prayer level requirement.
             combatPrayers.stream()
                 .filter(prayer -> (boolean) prayer.get("isUnlocked") 
                                  && client.getRealSkillLevel(Skill.PRAYER) >= (int) prayer.get("unlockLevel"))
@@ -86,28 +90,33 @@ if (gear != null) {
 
     // Optionally cast the Vengeance spell if enabled and requirements are met.
     if (castVengeance) {
-        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC); // Current boosted Magic level.
-        if (boostedMagicLevel >= 94) { // Vengeance requires Magic level 94
-            v.getCombat().spell(Spell.VENGEANCE); // Select the Vengeance spell.
-            v.getCombat().castTarget();             // Cast the spell on target but really self lol.
+        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
+        if (boostedMagicLevel >= 94) {
+            v.getCombat().spell(Spell.VENGEANCE);
+            v.getCombat().castTarget();
         }
+    }
+
+    // Override Spell Execution
+    if (overrideSpellEnabled) {
+        v.invoke("Cast", overrideSpellName, 1, 57, -1, 14287024, false);
     }
 
     // Execute the attack based on the attack style.
     if (attackStyle == 2) { // Mage Attack
-        int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC); // Current boosted Magic level.
-        List<Map<String, Object>> spells = (List<Map<String, Object>>) spellData;
+        if (!overrideSpellEnabled) {
+            int boostedMagicLevel = client.getBoostedSkillLevel(Skill.MAGIC);
+            List<Map<String, Object>> spells = (List<Map<String, Object>>) spellData;
 
-        // Stream through the spells to find the first one that meets the Magic level requirement.
-        spells.stream()
-            .filter(spell -> boostedMagicLevel >= (int) spell.get("requiredLevel"))
-            .findFirst()
-            .ifPresent(spell -> {
-                v.getCombat().spell((Spell) spell.get("spell")); // Select the spell.
-                v.getCombat().castTarget();                        // Cast the spell on the target.
-            });
+            spells.stream()
+                .filter(spell -> boostedMagicLevel >= (int) spell.get("requiredLevel"))
+                .findFirst()
+                .ifPresent(spell -> {
+                    v.getCombat().spell((Spell) spell.get("spell"));
+                    v.getCombat().castTarget();
+                });
+        }
     } else { // Melee or Range Attack
-        // Attack target if already in combat.
         if (v.getCombat().isInCombat()) {
             v.getCombat().attackTarget();
         }
